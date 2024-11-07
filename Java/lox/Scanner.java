@@ -91,13 +91,31 @@ class Scanner {
             case '>':
                 addToken(match('=') ? GREATER_EQUAL : GREATER);
                 break;
-            case '/':
                 if (match('/')) {
-                    // A comment goes until the end of the line.
-                    while (peek() != '\n' && !isAtEnd())
-                        advance();
-                } else {
-                    addToken(SLASH);
+                    // Check if it's a single-line comment.
+                    if (peek() == '/') {
+                        // Single-line comment: advance until the end of the line.
+                        while (peek() != '\n' && !isAtEnd()) {
+                            advance();
+                        }
+                    } 
+                    // Check if it's a multi-line comment.
+                    else if (peek() == '*') {
+                        // Multi-line comment: advance until you find */
+                        advance(); // Consume the '*'
+                        while (!(peek() == '*' && peekNext() == '/') && !isAtEnd()) {
+                            advance();
+                        }
+                        
+                        // If we reached the end of the comment (*/), advance past */
+                        if (!isAtEnd()) {
+                            advance(); // Consume '*'
+                            advance(); // Consume '/'
+                        }
+                    } else {
+                        // Otherwise, it's a '/' token (not a comment).
+                        addToken(SLASH);
+                    }
                 }
                 break;
             case ' ':

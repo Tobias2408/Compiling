@@ -91,33 +91,44 @@ class Scanner {
             case '>':
                 addToken(match('=') ? GREATER_EQUAL : GREATER);
                 break;
+                case '/':
                 if (match('/')) {
-                    // Check if it's a single-line comment.
-                    if (peek() == '/') {
-                        // Single-line comment: advance until the end of the line.
-                        while (peek() != '\n' && !isAtEnd()) {
-                            advance();
-                        }
-                    } 
-                    // Check if it's a multi-line comment.
-                    else if (peek() == '*') {
-                        // Multi-line comment: advance until you find */
-                        advance(); // Consume the '*'
-                        while (!(peek() == '*' && peekNext() == '/') && !isAtEnd()) {
-                            advance();
-                        }
-                        
-                        // If we reached the end of the comment (*/), advance past */
-                        if (!isAtEnd()) {
+                    // Single-line comment goes until the end of the line.
+                    while (peek() != '\n' && !isAtEnd()) {
+                        advance();
+                    }
+                } else if (match('*')) {
+                    // Start of a block comment.
+                    int nestingLevel = 1; // Track nested block comments.
+            
+                    while (nestingLevel > 0 && !isAtEnd()) {
+                        if (peek() == '/' && peekNext() == '*') {
+                            // Found another '/*', increase nesting level.
+                            nestingLevel++;
+                            advance(); // Consume '/'
+                            advance(); // Consume '*'
+                        } else if (peek() == '*' && peekNext() == '/') {
+                            // Found '*/', decrease nesting level.
+                            nestingLevel--;
                             advance(); // Consume '*'
                             advance(); // Consume '/'
+                        } else {
+                            // Regular character within the comment, handle newlines too.
+                            advance();
                         }
-                    } else {
-                        // Otherwise, it's a '/' token (not a comment).
-                        addToken(SLASH);
                     }
+            
+                    // If we reach here and `nestingLevel` is still > 0, it means we have an unclosed block comment.
+                    if (nestingLevel > 0) {
+                        error("Unterminated block comment.");
+                    }
+            
+                } else {
+                    // Not a comment; it's a regular slash token.
+                    addToken(SLASH);
                 }
                 break;
+            
             case ' ':
             case '\r':
             case '\t':

@@ -142,4 +142,14 @@ class Parser {
         }
         throw error(peek(), "Expect expression.");
     }
+
+    Expr* parseExpression() {
+        Expr* expr = parseAssignment();
+        while (match(COMMA)) {
+            Token comma = previous();
+            Expr* right = parseAssignment();
+            expr = new CommaExpr(expr, right);  // Combine into a comma expression
+        }
+        return expr;
+    }
 }

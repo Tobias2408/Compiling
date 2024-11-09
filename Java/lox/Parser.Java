@@ -152,4 +152,29 @@ class Parser {
         }
         return expr;
     }
+
+    private Expr ternary() {
+        Expr expr = orExpr();
+        if (match(QUESTION)) {
+            Expr ifTrue = expression();
+            consume(COLON, "Expect ':' after expression in ternary operator.");
+            Expr ifFalse = ternary(); // right-associative parsing
+            expr = new Expr.Ternary(expr, ifTrue, ifFalse);
+        }
+        return expr;
+    }
+    private Expr expression() {
+        if (match(BINARY_OPERATORS)) {  // Assuming BINARY_OPERATORS is a set of binary operator tokens
+            error(previous(), "Binary operator without left operand.");
+            // Parse and discard the right operand with appropriate precedence
+            parseAndDiscardRightOperand();
+        }
+        return equality();  // or the actual expression parsing function
+    }
+    
+    private void parseAndDiscardRightOperand() {
+        equality();  // Adjust for appropriate precedence (use the relevant parse method)
+    }
+        
 }
+
